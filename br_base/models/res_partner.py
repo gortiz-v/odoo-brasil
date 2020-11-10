@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009 Gabriel C. Stabel
 # © 2009 Renato Lima (Akretion)
 # © 2012 Raphaël Valyi (Akretion)
@@ -12,8 +11,8 @@ import base64
 import logging
 
 from odoo import models, fields, api, _
-from odoo.addons.br_base.tools import fiscal
-from odoo.exceptions import UserError
+from ..tools import fiscal
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -93,9 +92,9 @@ class ResPartner(models.Model):
             if item.l10n_br_cnpj_cpf and country_code.upper() == 'BR':
                 if item.is_company:
                     if not fiscal.validate_cnpj(item.l10n_br_cnpj_cpf):
-                        raise UserError(_(u'Invalid CNPJ Number!'))
+                        raise ValidationError(_(u'Invalid CNPJ Number!'))
                 elif not fiscal.validate_cpf(item.l10n_br_cnpj_cpf):
-                    raise UserError(_(u'Invalid CPF Number!'))
+                    raise ValidationError(_(u'Invalid CPF Number!'))
         return True
 
     def _validate_ie_param(self, uf, inscr_est):
@@ -112,20 +111,19 @@ class ResPartner(models.Model):
                 return False
         return True
 
-    @api.depends('state_id', 'is_company')
-    @api.constrains('l10n_br_inscr_est')
+    @api.constrains('l10n_br_inscr_est', 'state_id', 'is_company')
     def _check_ie(self):
         """Checks if company register number in field insc_est is valid,
         this method call others methods because this validation is State wise
-
         :Return: True or False."""
-        if not self.l10n_br_inscr_est or self.l10n_br_inscr_est == 'ISENTO' \
-                or not self.is_company:
-            return True
-        uf = self.state_id and self.state_id.code.lower() or ''
-        res = self._validate_ie_param(uf, self.l10n_br_inscr_est)
-        if not res:
-            raise UserError(_(u'Invalid State Inscription!'))
+        for partner in self:
+            if not partner.l10n_br_inscr_est or partner.l10n_br_inscr_est == 'ISENTO' \
+                    or not partner.is_company:
+                return True
+            uf = partner.state_id and partner.state_id.code.lower() or ''
+            res = partner._validate_ie_param(uf, partner.l10n_br_inscr_est)
+            if not res:
+                raise ValidationError(_(u'Invalid State Inscription!'))
         return True
 
     @api.one
@@ -140,8 +138,9 @@ class ResPartner(models.Model):
              ('id', '!=', self.id)])
 
         if len(partner_ids) > 0:
-            raise UserError(_(u'This State Inscription/RG number '
-                              u'is already being used by another partner!'))
+            raise ValidationError(
+                _('This State Inscription/RG number \
+                  is already being used by another partner!'))
         return True
 
     @api.onchange('l10n_br_cnpj_cpf')
@@ -215,7 +214,10 @@ class ResPartner(models.Model):
             info = info.infCons
             if info.cStat == 111 or info.cStat == 112:
                 if not self.l10n_br_inscr_est:
-                    self.l10n_br_inscr_est = info.infCad.IE.text
+                    inscr = info.infCad.IE.text
+                    if self.state_id.code == 'BA':
+                        inscr = inscr.zfill(9)
+                    self.l10n_br_inscr_est = inscr
                 if not self.l10n_br_cnpj_cpf:
                     self.l10n_br_cnpj_cpf = info.infCad.CNPJ.text
 

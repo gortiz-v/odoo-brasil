@@ -224,4 +224,4 @@ class InvoiceEletronic(models.Model):
                 justificativa=justificativa)
 
         if self.model == '009':
-            raise UserError(u'Não é possível cancelar NFSe automaticamente!')
+            raise UserError(_('Não é possível cancelar NFSe automaticamente!'))

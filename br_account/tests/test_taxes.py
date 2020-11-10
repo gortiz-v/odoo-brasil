@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from mock import patch
-from odoo.addons.br_account.tests.test_base import TestBaseBr
+from .test_base import TestBaseBr
 
 
 class TestTaxBrasil(TestBaseBr):
@@ -294,8 +293,8 @@ class TestTaxBrasil(TestBaseBr):
         self.assertEquals(res['total_excluded'], 100.0)
         self.assertEquals(res['total_included'], 100.0)
         self.assertEquals(len(res['taxes']), 3)
-        self.assertEquals(res['taxes'][0]['amount'], 2.0)  # Remetente
-        self.assertEquals(res['taxes'][1]['amount'], 8.0)  # Destinatário
+        self.assertEquals(res['taxes'][0]['amount'], 0.0)  # Remetente
+        self.assertEquals(res['taxes'][1]['amount'], 10.0)  # Destinatário
         self.assertEquals(res['taxes'][2]['amount'], 2.0)  # FCP
 
     @patch('odoo.addons.br_localization_filtering.models.br_localization_filtering.BrLocalizationFiltering._is_user_br_localization')  # noqa  java feelings
@@ -310,6 +309,6 @@ class TestTaxBrasil(TestBaseBr):
         self.assertEquals(res['total_excluded'], 100.0)
         self.assertEquals(res['total_included'], 100.0)
         self.assertEquals(len(res['taxes']), 3)
-        self.assertEquals(res['taxes'][0]['amount'], 2.24)  # Remetente
-        self.assertEquals(res['taxes'][1]['amount'], 8.96)  # Destinatário
+        self.assertEquals(res['taxes'][0]['amount'], 0.0)  # Remetente
+        self.assertEquals(res['taxes'][1]['amount'], 11.20)  # Destinatário
         self.assertEquals(res['taxes'][2]['amount'], 2.24)  # FCP

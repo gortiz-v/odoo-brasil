@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009  Renato Lima - Akretion
 # © 2012  Raphaël Valyi - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
@@ -296,8 +295,7 @@ class SaleOrderLine(models.Model):
                     vals.get('l10n_br_tax_issqn_id', empty) | \
                     vals.get('l10n_br_tax_csll_id', empty) | \
                     vals.get('l10n_br_tax_irrf_id', empty) | \
-                    vals.get('l10n_br_tax_inss_id', empty) | line.tax_id
-
+                    vals.get('l10n_br_tax_inss_id', empty)
                 line.update({
                     'tax_id': [(6, None, [x.id for x in tax_ids if x])]
                 })
@@ -307,7 +305,6 @@ class SaleOrderLine(models.Model):
     @api.multi
     def _prepare_invoice_line(self, qty):
         res = super(SaleOrderLine, self)._prepare_invoice_line(qty)
-
         res['l10n_br_valor_desconto'] = self.l10n_br_valor_desconto
         res['l10n_br_valor_bruto'] = self.l10n_br_valor_bruto
 
@@ -319,7 +316,7 @@ class SaleOrderLine(models.Model):
         icms_intra = self.tax_id.filtered(
             lambda x: x.l10n_br_domain == 'icms_intra')
         icms_fcp = self.tax_id.filtered(
-            lambda x: x.l10n_br_domain == 'icms_fcp')
+            lambda x: x.l10n_br_domain == 'fcp')
         ipi = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'ipi')
         pis = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'pis')
         cofins = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'cofins')
@@ -345,8 +342,8 @@ class SaleOrderLine(models.Model):
         res['l10n_br_tax_ii_id'] = ii and ii.id or False
         res['l10n_br_tax_issqn_id'] = issqn and issqn.id or False
         res['l10n_br_tax_csll_id'] = csll and csll.id or False
-        res['l10n_br_tax_irrf_id'] = inss and inss.id or False
-        res['l10n_br_tax_inss_id'] = irrf and irrf.id or False
+        res['l10n_br_tax_irrf_id'] = inss and irrf.id or False
+        res['l10n_br_tax_inss_id'] = irrf and inss.id or False
 
         res['l10n_br_product_type'] = self.product_id.l10n_br_fiscal_type
         res['l10n_br_company_fiscal_type'] = self.\

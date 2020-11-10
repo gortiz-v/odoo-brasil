@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
-from odoo.addons.br_account.models.cst import CST_IPI
+from .cst import CST_IPI
 
 
 class ProductFiscalClassification(models.Model):
@@ -28,26 +27,34 @@ class ProductFiscalClassification(models.Model):
     classe_enquadramento = fields.Char(string="Classe Enquadr.", size=5)
     codigo_enquadramento = fields.Char(
         string=u"Cód. Enquadramento", size=3, default='999')
-    tax_ipi_id = fields.Many2one('account.tax', string=u"Alíquota IPI",
-                                 domain=[('l10n_br_domain', '=', 'ipi')])
+    tax_ipi_id = fields.Many2one(
+        comodel_name='account.tax',
+        string=u"Alíquota IPI",
+        domain=[('l10n_br_domain', '=', 'ipi')])
     ipi_tipo = fields.Selection(
         [('percent', 'Percentual')],
-        'Tipo do IPI', required=True, default='percent')
+        string='Tipo do IPI',
+        required=True,
+        default='percent')
     ipi_reducao_bc = fields.Float(
-        u'% Redução Base', required=True, digits=dp.get_precision('Account'),
+        string=u'% Redução Base',
+        required=True,
+        digits=dp.get_precision('Account'),
         default=0.00)
     ipi_cst = fields.Selection(CST_IPI, string='CST IPI')
 
     # ICMS ST
     tax_icms_st_id = fields.Many2one(
-        'account.tax', string=u"Alíquota ICMS ST",
+        comodel_name='account.tax',
+        string=u"Alíquota ICMS ST",
         domain=[('l10n_br_domain', '=', 'icmsst')])
     icms_st_aliquota_reducao_base = fields.Float(
-        '% Red. Base ST',
+        string='% Red. Base ST',
         digits=dp.get_precision('Discount'))
     icms_st_aliquota_mva = fields.Float(
-        'MVA Ajustado ST',
+        string='MVA Ajustado ST',
         digits=dp.get_precision('Discount'), default=0.00)
+    active = fields.Boolean(default=True, string='Ativo')
 
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):

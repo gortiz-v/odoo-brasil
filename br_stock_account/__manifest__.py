@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -19,6 +18,7 @@
     ],
     'data': [
         'views/account_invoice.xml',
+        'views/stock_picking.xml',
         'reports/account_invoice.xml',
     ],
     'auto_install': True,

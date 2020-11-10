@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Alessandro Fernandes Martini, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -6,7 +5,7 @@ import base64
 from ..febraban.cnab import Cnab
 from decimal import Decimal
 from datetime import datetime
-from odoo import api, models
+from odoo import api, models, _
 from odoo.exceptions import UserError
 
 
@@ -17,13 +16,14 @@ class PaymentOrder(models.Model):
     def gerar_cnab(self):
         if len(self.line_ids) < 1:
             raise UserError(
-                u'Ordem de Cobrança não possui Linhas de Cobrança!')
+                _('Ordem de Cobrança não possui Linhas de Cobrança!'))
         self.data_emissao_cnab = datetime.now()
         self.file_number = self.env['ir.sequence'].next_by_code('cnab.nsa')
         for order_id in self:
             if order_id.line_ids.filtered(
                lambda x: x.state in ('processed', 'rejected', 'paid')):
-                raise UserError('Arquivo já enviado e processado pelo banco!')
+                raise UserError(
+                    _('Arquivo já enviado e processado pelo banco!'))
 
             cnab = Cnab.get_cnab(
                 order_id.src_bank_account_id.bank_bic, '240')()
@@ -122,7 +122,7 @@ class PaymentOrderLine(models.Model):
             'partner_id': self.partner_id.id,
             'debit': float(
                 cnab_vals['valor_titulo'] + cnab_vals['titulo_acrescimos'] -
-                cnab_vals['titulo_desconto'] - cnab_vals['valor_tarifas']
+                cnab_vals['titulo_desconto']
                 ),
             'credit': 0.0,
             'currency_id': self.currency_id.id,
@@ -132,7 +132,7 @@ class PaymentOrderLine(models.Model):
             account_id = self.journal_id.company_id.l10n_br_interest_account_id
             if not account_id:
                 raise UserError(
-                    'Configure a conta de recebimento de juros/multa')
+                    _('Configure a conta de recebimento de juros/multa'))
             ext_line = {
                 'name': 'Título Acréscimos (juros/multa)',
                 'move_id': move.id,
@@ -147,7 +147,17 @@ class PaymentOrderLine(models.Model):
             account_id = self.journal_id.company_id.l10n_br_bankfee_account_id
             if not account_id:
                 raise UserError(
-                    'Configure a conta de tarifas bancárias')
+                    _('Configure a conta de tarifas bancárias'))
+            aml_tarifa = {
+                'name': 'Tarifas bancárias',
+                'move_id': move.id,
+                'partner_id': self.partner_id.id,
+                'debit': 0.0,
+                'credit': float(cnab_vals['valor_tarifas']),
+                'currency_id': self.currency_id.id,
+                'account_id': self.journal_id.default_debit_account_id.id,
+            }
+            aml_obj.create(aml_tarifa)
             ext_line = {
                 'name': 'Tarifas bancárias (boleto)',
                 'move_id': move.id,

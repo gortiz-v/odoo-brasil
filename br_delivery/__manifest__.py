@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2010  Renato Lima - Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -27,7 +26,11 @@
         'views/sale.xml',
         'views/stock.xml',
         'views/account_invoice.xml',
+        'views/product_template.xml',
         'security/ir.model.access.csv',
+    ],
+    'demo': [
+        'data/delivery_demo.xml',
     ],
     'application': True,
 }

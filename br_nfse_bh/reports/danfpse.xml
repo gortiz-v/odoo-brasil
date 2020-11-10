@@ -69,7 +69,7 @@
                     <div style="border: 1px solid black; padding: 2px;text-align:center;">
                         <span style="font-size:9px;">Data e Hora de Emissão</span>
                         <br />
-                        <strong t-field="doc.data_emissao"></strong>
+                        <strong t-field="doc.data_emissao" t-options='{"format": "dd/MM/yyyy"}'></strong>
                     </div>
                 </div>
                 <div class="col-xs-4">
@@ -221,7 +221,7 @@
                         <tr style="border-bottom:1px solid gray;font-size:18px;font-weight:bold;">
                             <td>Valor dos serviços:</td>
                             <td style="text-align:right;">
-                                <span t-field="doc.valor_bruto"
+                                <span t-field="doc.valor_final"
                                     t-options='{"widget": "monetary",  "display_currency": doc.currency_id }'></span>
                             </td>
                         </tr>
@@ -249,7 +249,7 @@
                         <tr style="border-bottom:1px solid gray;font-size:18px;font-weight:bold;color:red;">
                             <td>Valor Líquido:</td>
                             <td style="text-align:right;">
-                                <span t-field="doc.valor_final"
+                                <span t-field="doc.total_com_retencoes"
                                     t-options='{"widget": "monetary",  "display_currency": doc.currency_id }'></span>
                             </td>
                         </tr>
@@ -260,7 +260,7 @@
                       <tr style="border-bottom:1px solid gray;font-size:18px;font-weight:bold;">
                           <td>Valor dos serviços:</td>
                           <td style="text-align:right;">
-                              <span t-field="doc.valor_bruto"
+                              <span t-field="doc.valor_final"
                                   t-options='{"widget": "monetary",  "display_currency": doc.currency_id }'></span>
                           </td>
                       </tr>

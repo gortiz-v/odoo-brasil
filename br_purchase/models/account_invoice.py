@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -51,8 +50,8 @@ class AccountInvoice(models.Model):
         res['l10n_br_tax_ii_id'] = ii and ii.id or False
         res['l10n_br_tax_issqn_id'] = issqn and issqn.id or False
         res['l10n_br_tax_csll_id'] = csll and csll.id or False
-        res['l10n_br_tax_irrf_id'] = inss and inss.id or False
-        res['l10n_br_tax_inss_id'] = irrf and irrf.id or False
+        res['l10n_br_tax_irrf_id'] = irrf and irrf.id or False
+        res['l10n_br_tax_inss_id'] = inss and inss.id or False
 
         res['fiscal_position_type'] = line.fiscal_position_type
         res['l10n_br_product_type'] = line.product_id.l10n_br_fiscal_type

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Alessandro Fernandes Martini, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -28,7 +27,7 @@ class InvoiceEletronicItem(models.Model):
 
     import_declaration_ids = fields.One2many(
         'br_account.import.declaration',
-        'invoice_eletronic_line_id', u'Declaração de Importação')
+        'invoice_eletronic_line_id', string=u'Declaração de Importação')
 
     # ----------- ICMS INTERESTADUAL -----------
     tem_difal = fields.Boolean(string=u'Difal?', readonly=True, states=STATE)
@@ -41,7 +40,7 @@ class InvoiceEletronicItem(models.Model):
     icms_aliquota_interestadual = fields.Float(
         string=u"% ICMS Inter", readonly=True, states=STATE)
     icms_aliquota_inter_part = fields.Float(
-        string=u'% Partilha', default=80.0, readonly=True, states=STATE)
+        string=u'% Partilha', default=100.0, readonly=True, states=STATE)
     icms_uf_remet = fields.Monetary(
         string=u'ICMS Remetente', readonly=True, states=STATE)
     icms_uf_dest = fields.Monetary(
@@ -49,3 +48,15 @@ class InvoiceEletronicItem(models.Model):
     icms_fcp_uf_dest = fields.Monetary(
         string=u'Valor FCP', readonly=True, states=STATE)
     informacao_adicional = fields.Text(string=u"Informação Adicional")
+
+    # =========================================================================
+    # ICMS Retido anteriormente por ST
+    # =========================================================================
+    icms_substituto = fields.Monetary(
+        "ICMS Substituto", readonly=True, states=STATE)
+    icms_bc_st_retido = fields.Monetary(
+        "Base Calc. ST Ret.", readonly=True, states=STATE)
+    icms_aliquota_st_retido = fields.Float(
+        "% ST Retido", readonly=True, states=STATE)
+    icms_st_retido = fields.Monetary(
+        "ICMS ST Ret.", readonly=True, states=STATE)

@@ -47,19 +47,26 @@ class AccountVoucher(models.Model):
     def prepare_voucher_values_to_copy(self, vals):
         return vals
 
+    def it_should_generate(self):
+        current_date = fields.Date.from_string(self.date)
+        due_date = fields.Date.from_string(self.date_due)
+        if not due_date or not current_date:
+            return False
+        if current_date > date.today():
+            return False
+        if not self.line_ids:
+            return False
+        return True
+
     def generate_recurring_vouchers(self):
         vouchers = self.search(
             [('l10n_br_recurring', '=', True),
              ('state', '=', 'posted')])
         for item in vouchers:
+            if not item.it_should_generate():
+                continue
             current_date = fields.Date.from_string(item.date)
             due_date = fields.Date.from_string(item.date_due)
-            if not due_date or not current_date:
-                continue
-            if current_date > date.today():
-                continue
-            if not item.line_ids:
-                continue
             vals = item.prepare_voucher_values_to_copy({
                 'account_date': current_date,
                 'date': current_date,
@@ -88,9 +95,9 @@ class AccountVoucher(models.Model):
         for line in move.line_ids:
             line2 = self.line_ids.filtered(
                 lambda x: x.account_id.id == line.account_id.id and
-                (x.price_subtotal if current_currency != company_currency else
-                 0.0) == line.amount_currency)
-            line.analytic_tag_ids = [(6, False, line2.analytic_tag_ids.ids)]
+                x.price_subtotal == line.balance)
+            if len(line2) == 1:
+                line.analytic_tag_ids = [(6, False, line2.analytic_tag_ids.ids)]
 
         return line_total
 

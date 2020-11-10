@@ -42,7 +42,7 @@
             <field name="number" position="after">
                 <field name="l10n_br_numero_nfse" />
             </field>
-      	</field>
+        </field>
     </record>
     <record id="view_br_nfse_invoice_tree" model="ir.ui.view">
         <field name="name">view.br_nfse.line.tree</field>

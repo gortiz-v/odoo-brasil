@@ -5,7 +5,7 @@ import logging
 from io import StringIO
 from datetime import date, datetime
 
-from odoo import models
+from odoo import models, _
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -17,12 +17,12 @@ except ImportError:
     _logger.error('Cannot import cnab240 cobranca', exc_info=True)
 
 
-class l10nBrPaymentCnabImport(models.TransientModel):
+class L10nBrPaymentCnabImport(models.TransientModel):
     _inherit = 'l10n_br.payment.cnab.import'
 
     def _get_account(self, cnab_file):
         if self.cnab_type != 'receivable':
-            return super(l10nBrPaymentCnabImport, self)._get_account(cnab_file)
+            return super(L10nBrPaymentCnabImport, self)._get_account(cnab_file)
 
         stream = StringIO(cnab_file.decode('ascii'))
         bank = get_bank(self.journal_id.bank_id.bic)
@@ -54,7 +54,7 @@ class l10nBrPaymentCnabImport(models.TransientModel):
 
     def do_import(self, cnab_file):
         if self.cnab_type != 'receivable':
-            return super(l10nBrPaymentCnabImport, self).do_import(cnab_file)
+            return super(L10nBrPaymentCnabImport, self).do_import(cnab_file)
 
         stream = StringIO(cnab_file.decode('ascii'))
         bank = get_bank(self.journal_id.bank_id.bic)
@@ -78,8 +78,18 @@ class l10nBrPaymentCnabImport(models.TransientModel):
                     self.journal_id.bank_id.bic,
                     evento.servico_codigo_movimento)
 
+                if (self.journal_id.bank_id.bic == '001'):
+                    codigo_convenio_banco = int(
+                        lote.header.codigo_convenio_banco[:9])
+                    if (len(str(codigo_convenio_banco)) == 7):
+                        nosso_numero = evento.nosso_numero[7:]
+                    else:
+                        nosso_numero = evento.nosso_numero
+                else:
+                    nosso_numero = evento.nosso_numero
+
                 payment_line = self.env['payment.order.line'].search(
-                    [('nosso_numero', '=', int(evento.nosso_numero)),
+                    [('nosso_numero', '=', int(nosso_numero)),
                      ('src_bank_account_id', '=',
                       self.journal_id.bank_account_id.id)])
 
@@ -123,7 +133,7 @@ class l10nBrPaymentCnabImport(models.TransientModel):
                 payment_line.process_receivable_line(statement, vals)
 
         if not statement:
-            raise UserError('Nenhum registro localizado nesse extrato!')
+            raise UserError(_('Nenhum registro localizado nesse extrato!'))
         action = self.env.ref(
             'br_account_payment.action_payment_statement_tree')
         return action.read()[0]

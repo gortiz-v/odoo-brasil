@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -35,6 +34,8 @@ class AccountInvoice(models.Model):
         string=u"Número NFe", compute="_compute_nfe_number")
     nfe_exception_number = fields.Integer(
         string=u"Número NFe", compute="_compute_nfe_number")
+    import_declaration_ids = fields.One2many(
+        'br_account.import.declaration', 'invoice_id')
 
     @api.multi
     def action_invoice_draft(self):
@@ -42,9 +43,10 @@ class AccountInvoice(models.Model):
             docs = self.env['invoice.eletronic'].search(
                 [('invoice_id', '=', item.id)])
             for doc in docs:
-                if doc.state in ('done', 'denied', 'cancel'):
-                    raise UserError('Nota fiscal já emitida para esta fatura - \
-                                    Duplique a fatura para continuar')
+                if doc.state in ('done', 'denied'):
+                    raise UserError(
+                        _('Nota fiscal já emitida para esta fatura - \
+                          Duplique a fatura para continuar'))
         return super(AccountInvoice, self).action_invoice_draft()
 
     def invoice_print(self):
@@ -78,6 +80,13 @@ class AccountInvoice(models.Model):
                 {'number_next_actual': inv_inutilized.numeration_end + 1})
         return serie_id.internal_sequence_id.next_by_id()
 
+    def apply_di_to_items(self):
+        for invoice in self:
+            invoice.invoice_line_ids.write({
+                'import_declaration_ids': [
+                    (6, None, invoice.import_declaration_ids.ids)]
+            })
+
     def _prepare_edoc_vals(self, inv, inv_lines, serie_id):
         res = super(AccountInvoice, self)._prepare_edoc_vals(
             inv, inv_lines, serie_id)
@@ -96,6 +105,10 @@ class AccountInvoice(models.Model):
         res['fatura_bruto'] = inv.l10n_br_total_bruto
         res['fatura_desconto'] = inv.l10n_br_total_desconto
         res['fatura_liquido'] = inv.amount_total
+
+        if inv.type not in ("out_refund", "in_refund"):
+            res['pedido_compra'] = inv.name
+
         res['pedido_compra'] = inv.name
         res['valor_icms_uf_remet'] = inv.l10n_br_valor_icms_uf_remet
         res['valor_icms_uf_dest'] = inv.l10n_br_valor_icms_uf_dest
@@ -108,7 +121,8 @@ class AccountInvoice(models.Model):
         res['name'] = 'Documento Eletrônico: nº %s' % numero_nfe
         res['ambiente'] = 'homologacao' \
             if inv.company_id.tipo_ambiente == '2' else 'producao'
-
+        if inv.goods_delivery_date:
+            res['data_entrada_saida'] = inv.goods_delivery_date
         # Indicador Consumidor Final
         if inv.commercial_partner_id.is_company:
             res['ind_final'] = '0'
@@ -132,6 +146,8 @@ class AccountInvoice(models.Model):
                                                              'MT', 'PE', 'RN',
                                                              'SP'):
                 ind_ie_dest = '9'
+            elif inv.commercial_partner_id.country_id.code != 'BR':
+                ind_ie_dest = '9'
             else:
                 ind_ie_dest = '2'
         else:
@@ -139,6 +155,10 @@ class AccountInvoice(models.Model):
         if inv.commercial_partner_id.indicador_ie_dest:
             ind_ie_dest = inv.commercial_partner_id.indicador_ie_dest
         res['ind_ie_dest'] = ind_ie_dest
+        iest_id = inv.company_id.iest_ids.filtered(
+            lambda x: x.state_id == inv.commercial_partner_id.state_id)
+        if iest_id:
+            res['iest'] = iest_id.name
 
         # Duplicatas
         duplicatas = []
@@ -177,6 +197,11 @@ class AccountInvoice(models.Model):
         res['metodo_pagamento'] = (inv.l10n_br_payment_mode_id.tipo_pagamento
                                    or '01')
         res['valor_pago'] = inv.amount_total
+
+        # Endereço de Entrega
+        if inv.partner_shipping_id != inv.partner_id:
+            res['partner_shipping_id'] = inv.partner_shipping_id.id
+
         return res
 
     def _prepare_edoc_item_vals(self, invoice_line):
@@ -204,6 +229,11 @@ class AccountInvoice(models.Model):
         vals['icms_fcp_uf_dest'] = invoice_line.l10n_br_icms_fcp_uf_dest or 0.0
         vals['icms_aliquota_inter_part'] = \
             invoice_line.l10n_br_icms_aliquota_inter_part or 0.0
+        vals['icms_substituto'] = invoice_line.l10n_br_icms_substituto or 0.0
+        vals['icms_bc_st_retido'] = invoice_line.l10n_br_icms_bc_st_retido or 0.0
+        vals['icms_aliquota_st_retido'] = \
+            invoice_line.l10n_br_icms_aliquota_st_retido or 0.0
+        vals['icms_st_retido'] = invoice_line.l10n_br_icms_st_retido or 0.0
 
         di_importacao = []
         for di in invoice_line.l10n_br_import_declaration_ids:
@@ -235,3 +265,22 @@ class AccountInvoice(models.Model):
         vals['informacao_adicional'] = invoice_line.\
             l10n_br_informacao_adicional
         return vals
+
+    @api.multi
+    def copy(self, default=None):
+        self.ensure_one()
+        new_acc_inv = super(AccountInvoice, self).copy(default)
+        if self.import_declaration_ids:
+            new_acc_inv.import_declaration_ids = self.import_declaration_ids
+            for i in range(len(new_acc_inv.invoice_line_ids)):
+                new_acc_inv.invoice_line_ids[i].declaration_line_ids = \
+                    self.invoice_line_ids[i].declaration_line_ids
+        return new_acc_inv
+
+
+class AccountInvoiceLine(models.Model):
+    _inherit = 'account.invoice.line'
+
+    declaration_line_ids = fields.One2many(
+        'br_account.import.declaration.line',
+        'invoice_line_id', string='Adições da DI')

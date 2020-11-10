@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -9,11 +8,15 @@ class AccountInvoice(models.Model):
     _name = 'account.invoice'
     _inherit = ['account.invoice', 'br.localization.filtering']
 
-    @api.depends('l10n_br_invoice_eletronic_ids.numero_nfse')
+    @api.depends('invoice_line_ids.numero_nfse',
+                 'l10n_br_invoice_eletronic_ids.numero_nfse')
     def _compute_nfse_number(self):
         for inv in self:
             numeros = inv.l10n_br_invoice_eletronic_ids.mapped('numero_nfse')
-            numeros = [n for n in numeros if n]
+            numeros = set([n for n in numeros if n])
+            if not numeros:
+                numeros = inv.invoice_line_ids.mapped('numero_nfse')
+                numeros = set([n for n in numeros if n])
             inv.l10n_br_numero_nfse = ','.join(numeros)
 
     l10n_br_ambiente_nfse = fields.Selection(

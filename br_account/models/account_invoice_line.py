@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009 Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -6,12 +5,12 @@
 
 from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
-from odoo.addons.br_account.models.cst import CST_ICMS
-from odoo.addons.br_account.models.cst import CSOSN_SIMPLES
-from odoo.addons.br_account.models.cst import CST_IPI
-from odoo.addons.br_account.models.cst import CST_PIS_COFINS
-from odoo.addons.br_account.models.cst import ORIGEM_PROD
-from odoo.addons.br_account.models.res_company import COMPANY_FISCAL_TYPE
+from .cst import CST_ICMS
+from .cst import CSOSN_SIMPLES
+from .cst import CST_IPI
+from .cst import CST_PIS_COFINS
+from .cst import ORIGEM_PROD
+from .res_company import COMPANY_FISCAL_TYPE
 
 
 class AccountInvoiceLine(models.Model):
@@ -196,7 +195,7 @@ class AccountInvoiceLine(models.Model):
     def _compute_cst_icms(self):
         for item in self:
             item.l10n_br_icms_cst = (item.l10n_br_icms_cst_normal
-                                     if item.l10n_br_company_fiscal_type == '3'
+                                     if item.l10n_br_company_fiscal_type != '1'
                                      else item.l10n_br_icms_csosn_simples)
 
     l10n_br_price_tax = fields.Float(
@@ -307,8 +306,9 @@ class AccountInvoiceLine(models.Model):
          ('2', u'2 - Lista Positiva (valor)'),
          ('3', u'3 - Lista Neutra (valor)'),
          ('4', u'4 - Margem Valor Agregado (%)'),
-         ('5', u'5 - Pauta (valor)')],
-        'Tipo Base ICMS ST', default='4',
+         ('5', u'5 - Pauta (valor)'),
+         ('6', u'6 - Valor da Operação')],
+        'Tipo Base ICMS ST', required=True, default='4',
         oldname='icms_st_tipo_base')
     l10n_br_icms_st_valor = fields.Float(
         'Valor ICMS ST', required=True, compute='_compute_price', store=True,
@@ -320,8 +320,8 @@ class AccountInvoiceLine(models.Model):
         oldname='icms_st_base_calculo')
     l10n_br_icms_st_aliquota = fields.Float(
         '% ICMS ST', digits=dp.get_precision('Discount'),
-        default=0.00, oldname='icms_st_aliquota')
-    l10n_br_icms_st_aliquota_reducao_base = fields.Float(
+        default=0.00)
+    icms_st_aliquota_reducao_base = fields.Float(
         '% Red. Base ST',
         digits=dp.get_precision('Discount'),
         oldname='icms_st_aliquota_reducao_base')
@@ -353,7 +353,7 @@ class AccountInvoiceLine(models.Model):
         'account.tax', string="% FCP", domain=[('l10n_br_domain', '=', 'fcp')],
         oldname='tax_icms_fcp_id')
     l10n_br_icms_aliquota_inter_part = fields.Float(
-        u'% Partilha', default=80.0, digits=dp.get_precision('Discount'),
+        u'% Partilha', default=100.0, digits=dp.get_precision('Discount'),
         oldname='icms_aliquota_inter_part')
     l10n_br_icms_fcp_uf_dest = fields.Float(
         string=u'Valor FCP', compute='_compute_price',
@@ -364,6 +364,18 @@ class AccountInvoiceLine(models.Model):
     l10n_br_icms_uf_remet = fields.Float(
         u'ICMS Remetente', compute='_compute_price',
         digits=dp.get_precision('Discount'), oldname='icms_uf_remet')
+
+    # =========================================================================
+    # ICMS Retido anteriormente por ST
+    # =========================================================================
+    icms_substituto = fields.Monetary(
+        "ICMS Substituto", digits=dp.get_precision('Account'))
+    icms_bc_st_retido = fields.Monetary(
+        "Base Calc. ST Ret.", digits=dp.get_precision('Account'))
+    icms_aliquota_st_retido = fields.Float(
+        "% ST Retido", digits=dp.get_precision('Account'))
+    icms_st_retido = fields.Monetary(
+        "ICMS ST Ret.", digits=dp.get_precision('Account'))
 
     # =========================================================================
     # ICMS Simples Nacional
@@ -529,9 +541,8 @@ class AccountInvoiceLine(models.Model):
         'Desp. Aduaneiras', required=True,
         digits=dp.get_precision('Account'), default=0.00,
         oldname='ii_valor_despesas')
-    l10n_br_import_declaration_ids = fields.One2many(
-        'br_account.import.declaration',
-        'invoice_line_id', u'Declaração de Importação',
+    l10n_br_import_declaration_ids = fields.Many2many(
+        'br_account.import.declaration', string='Declaração de Importação',
         oldname='import_declaration_ids')
 
     # =========================================================================

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -12,51 +11,52 @@ class CashFlowReport(models.TransientModel):
     _name = 'account.cash.flow'
     _description = u'Cash Flow Report'
 
-    @api.one
-    def calc_final_amount(self):
-        balance = 0
-        start_balance = 0
-        receivables = 0
-        payables = 0
-        balance_period = 0
-        for line in self.line_ids:
-            balance += line.amount
-            if line.liquidity:
-                start_balance += line.amount
-            if line.line_type == 'receivable':
-                receivables += line.amount
-            if line.line_type == 'payable':
-                payables += line.amount
-            if not line.liquidity:
-                balance_period += line.amount
-        balance += self.start_amount
+    def _compute_final_amount(self):
+        for item in self:
+            balance = 0
+            start_balance = 0
+            receivables = 0
+            payables = 0
+            balance_period = 0
+            for line in item.line_ids:
+                balance += line.amount
+                if line.liquidity:
+                    start_balance += line.amount
+                if line.line_type == 'receivable':
+                    receivables += line.amount
+                if line.line_type == 'payable':
+                    payables += line.amount
+                if not line.liquidity:
+                    balance_period += line.amount
+            balance += item.start_amount
 
-        self.start_balance = start_balance
-        self.total_payables = payables
-        self.total_receivables = receivables
-        self.period_balance = balance_period
-        self.final_amount = balance
+            item.start_balance = start_balance
+            item.total_payables = payables
+            item.total_receivables = receivables
+            item.period_balance = balance_period
+            item.final_amount = balance
 
     ignore_outstanding = fields.Boolean(string="Ignorar Vencidos?")
+    account_ids = fields.Many2many('account.account', string="Filtrar Contas")
     end_date = fields.Date(
         string=u"End Date", required=True,
         default=fields.date.today()+datetime.timedelta(6*365/12))
     start_amount = fields.Float(string=u"Initial Value",
                                 digits=dp.get_precision('Account'))
     start_balance = fields.Float(string=u"Saldo Inicial",
-                                 compute="calc_final_amount",
+                                 compute="_compute_final_amount",
                                  digits=dp.get_precision('Account'))
     total_receivables = fields.Float(string=u"Total de Recebimentos",
-                                     compute="calc_final_amount",
+                                     compute="_compute_final_amount",
                                      digits=dp.get_precision('Account'))
     total_payables = fields.Float(string=u"Total de Despesas",
-                                  compute="calc_final_amount",
+                                  compute="_compute_final_amount",
                                   digits=dp.get_precision('Account'))
     period_balance = fields.Float(string=u"Saldo do Período",
-                                  compute="calc_final_amount",
+                                  compute="_compute_final_amount",
                                   digits=dp.get_precision('Account'))
     final_amount = fields.Float(string=u"Saldo Final",
-                                compute="calc_final_amount",
+                                compute="_compute_final_amount",
                                 digits=dp.get_precision('Account'))
     line_ids = fields.One2many(
         "account.cash.flow.line", "cashflow_id",
@@ -109,12 +109,12 @@ class CashFlowReport(models.TransientModel):
         trace3 = go.Bar(
             x=moves['date_maturity'],
             y=moves['receitas'],
-            name='Receitas'
+            name='Receitas',
         )
         trace4 = go.Bar(
             x=moves['date_maturity'],
             y=moves['despesas'],
-            name='Despesas'
+            name='Despesas',
         )
         moves.drop_duplicates(
             subset='date_maturity', keep='last', inplace=True)
@@ -128,7 +128,7 @@ class CashFlowReport(models.TransientModel):
             name="Saldo",
             line=dict(
                 shape='spline'
-            )
+            ),
         )
 
         data = [trace3, trace4, trace5]
@@ -147,8 +147,10 @@ class CashFlowReport(models.TransientModel):
 
     @api.multi
     def calculate_liquidity(self):
-        accs = self.env['account.account'].search(
-            [('user_type_id.type', '=', 'liquidity')])
+        domain = [('user_type_id.type', '=', 'liquidity')]
+        if self.account_ids:
+            domain += [('id', 'in', self.account_ids.ids)]
+        accs = self.env['account.account'].search(domain)
         liquidity_lines = []
         for acc in accs:
             self.env.cr.execute(

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -13,6 +12,9 @@ class AccountInvoice(models.Model):
     l10n_br_fiscal_position_type = fields.Selection(
         related='fiscal_position_id.l10n_br_fiscal_type',
         readonly=True, oldname='fiscal_position_type')
+    l10n_br_picking_origin_id = fields.Many2one(
+        'stock.picking', string="Picking Origin",
+        oldname='picking_origin_id')
 
     @api.multi
     def copy(self, default=None):
@@ -56,6 +58,8 @@ class AccountInvoice(models.Model):
         compute="_compute_amount", oldname='total_frete')
 
     # Transporte
+    goods_delivery_date = fields.Datetime(
+        string="Data Entrega", help="Data para saída/entrada das mercadorias")
     freight_responsibility = fields.Selection(
         [('0', '0 - Contratação do Frete por conta do Remetente (CIF)'),
          ('1', '1 - Contratação do Frete por conta do Destinatário (FOB)'),

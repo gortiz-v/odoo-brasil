@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -16,6 +15,7 @@
     'data': [
         'views/purchase_view.xml',
         'views/account_invoice.xml',
+        'views/res_partner.xml',
     ],
     'installable': True,
     'auto_install': True

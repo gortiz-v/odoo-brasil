@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -272,7 +271,7 @@ class AccountTax(models.Model):
         if 'icms_aliquota_inter_part' in self.env.context:
             icms_inter_part = self.env.context["icms_aliquota_inter_part"]
         else:
-            icms_inter_part = 80.0
+            icms_inter_part = 100.0
         vals_inter['amount'] = round((interno - interestadual) *
                                      (100 - icms_inter_part) / 100, 2)
         vals_intra['amount'] = round((interno - interestadual) *

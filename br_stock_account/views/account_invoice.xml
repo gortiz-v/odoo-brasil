@@ -20,6 +20,7 @@
                 <page name="transporte" string="Transporte" attrs="{'invisible': [('l10n_br_localization', '=', False)]}">
                     <group>
                         <group name="delivery_info">
+                            <field name="goods_delivery_date"/>
                             <field name="freight_responsibility"/>
                             <field name="shipping_supplier_id" domain="[('supplier', '=', True)]"/>
                             <field name="vehicle_plate"/>
@@ -58,6 +59,9 @@
         <field name="model">account.invoice</field>
         <field name="inherit_id" ref="br_account.view_br_account_invoice_supplier_form" />
         <field name="arch" type="xml">
+            <field name="fiscal_position_id" position="after">
+                <field name="fiscal_position_type" invisible="1"/>
+            </field>
             <xpath expr="//field[@name='invoice_line_ids']/tree" position="inside">
                 <field name="l10n_br_valor_frete" invisible="1" />
                 <field name="l10n_br_valor_seguro" invisible="1" />
@@ -73,6 +77,7 @@
                 <page name="transporte" string="Transporte" attrs="{'invisible': [('l10n_br_localization', '=', False)]}">
                     <group>
                         <group name="delivery_info">
+                            <field name="goods_delivery_date" />
                             <field name="freight_responsibility"/>
                             <field name="shipping_supplier_id" domain="[('supplier', '=', True)]"/>
                             <field name="vehicle_plate"/>
@@ -107,6 +112,17 @@
                 <field name="l10n_br_valor_frete" attrs="{'invisible': [('l10n_br_product_type', '=', 'service')]}" />
                 <field name="l10n_br_valor_seguro" attrs="{'invisible': [('l10n_br_product_type', '=', 'service')]}" />
                 <field name="l10n_br_outras_despesas" attrs="{'invisible': [('l10n_br_product_type', '=', 'service')]}" />
+            </field>
+        </field>
+    </record>
+
+    <record id="view_br_stock_account_invoice_search" model="ir.ui.view">
+        <field name="name">view_br_stock_account_invoice_search</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter" />
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="picking_origin_id" />
             </field>
         </field>
     </record>

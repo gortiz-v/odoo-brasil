@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009 Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -371,15 +370,12 @@ class AccountInvoice(models.Model):
             for tax in line.invoice_line_tax_ids:
                 tax_dict = next(
                     x for x in taxes_dict['taxes'] if x['id'] == tax.id)
-                if not tax.price_include and tax.account_id:
-                    res[contador]['price'] += tax_dict['amount']
                 if tax.price_include and (not tax.account_id or
                                           not tax.l10n_br_deduced_account_id):
                     if tax_dict['amount'] > 0.0:  # Negativo é retido
-                        res[contador]['price'] -= tax_dict['amount']
+                        res[contador]['price'] -= round(tax_dict['amount'], 2)
 
             contador += 1
-
         return res
 
     @api.multi
@@ -406,13 +402,13 @@ class AccountInvoice(models.Model):
         for line in self.invoice_line_ids:
             other_taxes = line.invoice_line_tax_ids.filtered(
                 lambda x: not x.l10n_br_domain)
-            line.invoice_line_tax_ids = \
-                other_taxes | line.l10n_br_tax_icms_id | \
+            line.invoice_line_tax_ids = line.l10n_br_tax_icms_id | \
+                line.l10n_br_tax_icms_st_id | line.l10n_br_tax_icms_inter_id | \
+                line.l10n_br_tax_icms_intra_id | line.l10n_br_tax_icms_fcp_id | \
                 line.l10n_br_tax_ipi_id | line.l10n_br_tax_pis_id | \
-                line.l10n_br_tax_cofins_id | line.l10n_br_tax_issqn_id | \
-                line.l10n_br_tax_ii_id | line.l10n_br_tax_icms_st_id | \
-                line.l10n_br_tax_csll_id | line.l10n_br_tax_irrf_id | \
-                line.l10n_br_tax_inss_id
+                line.l10n_br_tax_cofins_id |  line.l10n_br_tax_issqn_id | \
+                line.l10n_br_tax_ii_id | line.l10n_br_tax_csll_id | \
+                line.l10n_br_tax_irrf_id | line.l10n_br_tax_inss_id | other_taxes
 
             ctx = line._prepare_tax_context()
             tax_ids = line.invoice_line_tax_ids.with_context(**ctx)
@@ -445,7 +441,6 @@ class AccountInvoice(models.Model):
                 done_taxes.append(tax.id)
                 res.append({
                     'invoice_tax_line_id': tax_line.id,
-                    'tax_line_id': tax_line.tax_id.id,
                     'type': 'tax',
                     'name': tax_line.name,
                     'price_unit': tax_line.amount * -1,
@@ -468,6 +463,8 @@ class AccountInvoice(models.Model):
             description=description, journal_id=journal_id)
         if not self.l10n_br_localization:
             return res
+        docs_related = self._prepare_related_documents(invoice)
+        res['l10n_br_fiscal_document_related_ids'] = docs_related
         res['l10n_br_product_document_id'] = \
             invoice.l10n_br_product_document_id.id
         res['l10n_br_product_serie_id'] = invoice.l10n_br_product_serie_id.id
@@ -475,3 +472,17 @@ class AccountInvoice(models.Model):
             invoice.l10n_br_service_document_id.id
         res['l10n_br_service_serie_id'] = invoice.l10n_br_service_serie_id.id
         return res
+
+    def _prepare_related_documents(self, invoice):
+        doc_related = self.env['br_account.document.related']
+        related_vals = []
+        for doc in invoice.invoice_eletronic_ids:
+            vals = {'invoice_related_id': invoice.id,
+                    'document_type':
+                        doc_related.translate_document_type(
+                            invoice.product_document_id.code),
+                    'access_key': doc.chave_nfe,
+                    'numero': doc.numero}
+            related = (0, False, vals)
+            related_vals.append(related)
+        return related_vals
