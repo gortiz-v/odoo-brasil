@@ -76,6 +76,7 @@ class SaleOrder(models.Model):
 
 
 class SaleOrderLine(models.Model):
+    _name = 'sale.order.line'
     _inherit = ['sale.order.line', 'br.localization.filtering']
 
     def _prepare_tax_context(self):
@@ -253,7 +254,7 @@ class SaleOrderLine(models.Model):
     def _update_tax_from_ncm(self):
         if self.product_id:
             ncm = self.product_id.l10n_br_fiscal_classification_id
-            taxes = ncm.tax_icms_st_id | ncm.tax_ipi_id | self.tax_id
+            taxes = ncm.tax_icms_st_id | ncm.tax_ipi_id
             self.update({
                 'l10n_br_icms_st_aliquota_mva': ncm.icms_st_aliquota_mva,
                 'l10n_br_icms_st_aliquota_reducao_base':
@@ -315,8 +316,8 @@ class SaleOrderLine(models.Model):
             lambda x: x.l10n_br_domain == 'icms_inter')
         icms_intra = self.tax_id.filtered(
             lambda x: x.l10n_br_domain == 'icms_intra')
-        icms_fcp = self.tax_id.filtered(
-            lambda x: x.l10n_br_domain == 'fcp')
+        icms_fcp = self.tax_id.filtered\
+            (lambda x: x.l10n_br_domain == 'fcp')
         ipi = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'ipi')
         pis = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'pis')
         cofins = self.tax_id.filtered(lambda x: x.l10n_br_domain == 'cofins')
@@ -342,8 +343,8 @@ class SaleOrderLine(models.Model):
         res['l10n_br_tax_ii_id'] = ii and ii.id or False
         res['l10n_br_tax_issqn_id'] = issqn and issqn.id or False
         res['l10n_br_tax_csll_id'] = csll and csll.id or False
-        res['l10n_br_tax_irrf_id'] = inss and irrf.id or False
-        res['l10n_br_tax_inss_id'] = irrf and inss.id or False
+        res['l10n_br_tax_irrf_id'] = irrf and irrf.id or False
+        res['l10n_br_tax_inss_id'] = inss and inss.id or False
 
         res['l10n_br_product_type'] = self.product_id.l10n_br_fiscal_type
         res['l10n_br_company_fiscal_type'] = self.\

@@ -8,14 +8,14 @@ class AccountInvoice(models.Model):
     _name = 'account.invoice'
     _inherit = ['account.invoice', 'br.localization.filtering']
 
-    @api.depends('invoice_line_ids.numero_nfse',
+    @api.depends('invoice_line_ids.l10n_br_numero_nfse',
                  'l10n_br_invoice_eletronic_ids.numero_nfse')
     def _compute_nfse_number(self):
         for inv in self:
             numeros = inv.l10n_br_invoice_eletronic_ids.mapped('numero_nfse')
             numeros = set([n for n in numeros if n])
             if not numeros:
-                numeros = inv.invoice_line_ids.mapped('numero_nfse')
+                numeros = inv.invoice_line_ids.mapped('l10n_br_numero_nfse')
                 numeros = set([n for n in numeros if n])
             inv.l10n_br_numero_nfse = ','.join(numeros)
 
@@ -37,6 +37,7 @@ class AccountInvoice(models.Model):
         res['serie'] = serie_id.id
         res['serie_documento'] = serie_id.code
         res['model'] = serie_id.fiscal_document_id.code
+
         # Feito para evitar que o número seja incrementado duas vezes
         if 'numero' not in res:
             res['numero'] = serie_id.internal_sequence_id.next_by_id()

@@ -109,7 +109,6 @@ class AccountInvoice(models.Model):
         if inv.type not in ("out_refund", "in_refund"):
             res['pedido_compra'] = inv.name
 
-        res['pedido_compra'] = inv.name
         res['valor_icms_uf_remet'] = inv.l10n_br_valor_icms_uf_remet
         res['valor_icms_uf_dest'] = inv.l10n_br_valor_icms_uf_dest
         res['valor_icms_fcp_uf_dest'] = inv.l10n_br_valor_icms_fcp_uf_dest
@@ -194,8 +193,7 @@ class AccountInvoice(models.Model):
 
         # NFC-e
         res['troco'] = 0.0
-        res['metodo_pagamento'] = (inv.l10n_br_payment_mode_id.tipo_pagamento
-                                   or '01')
+        res['metodo_pagamento'] = inv.l10n_br_payment_mode_id.tipo_pagamento or '01'
         res['valor_pago'] = inv.amount_total
 
         # Endereço de Entrega

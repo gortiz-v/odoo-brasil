@@ -153,8 +153,7 @@ class Cnab240(object):
             "valor_juros_encargos": self._string_to_monetary(
                 line.interest_value),
             # GPS
-            "contribuinte_nome":
-                self._order.company_id.l10n_br_legal_name[:30],
+            "contribuinte_nome": self._order.company_id.l10n_br_legal_name[:30],
             "codigo_receita_tributo": information_id.codigo_receita or '',
             "tipo_identificacao_contribuinte": 1,
             "identificacao_contribuinte": self._string_to_num(
@@ -204,7 +203,7 @@ class Cnab240(object):
             "cedente_inscricao_tipo": 2,
             "cedente_inscricao_numero": self._string_to_num(
                 self._order.company_id.l10n_br_cnpj_cpf),
-            "codigo_convenio": str(bank.codigo_convenio),
+            "codigo_convenio": str(bank.l10n_br_convenio_pagamento),
             "cedente_agencia": bank.l10n_br_number,
             "cedente_agencia_dv": bank.l10n_br_number_dig or '',
             "cedente_conta": bank.acc_number,

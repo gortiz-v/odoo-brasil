@@ -11,7 +11,8 @@ from odoo.exceptions import UserError
 
 
 class SaleOrder(models.Model):
-    _inherit = 'sale.order'
+    _name = 'sale.order'
+    _inherit = ['sale.order', 'br.localization.filtering']
 
     @api.depends('order_line.price_total')
     def _amount_all(self):
@@ -85,7 +86,7 @@ class SaleOrder(models.Model):
 
     @api.multi
     def action_confirm(self):
-        for order in self:
+        for order in self.filtered(lambda x: x.l10n_br_localization):
             prec = order.currency_id.decimal_places
             itens = order.order_line
             frete = round(sum(x.valor_frete for x in itens), prec)
@@ -149,7 +150,7 @@ class SaleOrderLine(models.Model):
     def _prepare_invoice_line(self, qty):
         res = super(SaleOrderLine, self)._prepare_invoice_line(qty)
 
-        res['l10n_br_valor_seguro'] = self.valor_seguro
-        res['l10n_br_outras_despesas'] = self.outras_despesas
-        res['l10n_br_valor_frete'] = self.valor_frete
+        res['valor_seguro'] = self.valor_seguro
+        res['outras_despesas'] = self.outras_despesas
+        res['valor_frete'] = self.valor_frete
         return res

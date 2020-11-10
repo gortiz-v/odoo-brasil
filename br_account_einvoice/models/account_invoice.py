@@ -252,11 +252,11 @@ class AccountInvoice(models.Model):
         res = super(AccountInvoice, self).invoice_validate()
         for item in self.filtered(lambda x: x.l10n_br_localization):
             if item.l10n_br_product_document_id.electronic:
-                inv_lines = item.invoice_line_ids.filtered(
-                    lambda x: x.product_id.l10n_br_fiscal_type == 'product')
                 if item.company_id.l10n_br_nfse_conjugada:
                     inv_lines = item.invoice_line_ids
-
+                else:
+                    inv_lines = item.invoice_line_ids.filtered(
+                        lambda x: x.product_id.l10n_br_fiscal_type == 'product')
                 if inv_lines:
                     edoc_vals = self._prepare_edoc_vals(
                         item, inv_lines, item.l10n_br_product_serie_id)

@@ -53,7 +53,7 @@ class AccountInvoice(models.Model):
         res['l10n_br_tax_irrf_id'] = irrf and irrf.id or False
         res['l10n_br_tax_inss_id'] = inss and inss.id or False
 
-        res['fiscal_position_type'] = line.fiscal_position_type
+        res['l10n_br_fiscal_position_type'] = line.l10n_br_fiscal_position_type
         res['l10n_br_product_type'] = line.product_id.l10n_br_fiscal_type
         res['l10n_br_company_fiscal_type'] = line.company_id.\
             l10n_br_fiscal_type

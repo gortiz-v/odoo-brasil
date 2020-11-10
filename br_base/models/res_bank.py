@@ -57,9 +57,9 @@ class ResPartnerBank(models.Model):
     _inherit = ['res.partner.bank', 'br.localization.filtering']
 
     acc_number = fields.Char('Account Number', size=64, required=False)
-    acc_number_dig = fields.Char(u'Account Number Digit', size=8)
-    l10n_br_number = fields.Char(u'Agency', size=8, oldname='bra_number')
-    l10n_br_number_dig = fields.Char(u'Account Agency Digit', size=8,
+    acc_number_dig = fields.Char('Account Number Digit', size=8)
+    l10n_br_number = fields.Char('Agency', size=8, oldname='bra_number')
+    l10n_br_number_dig = fields.Char('Account Agency Digit', size=8,
                                      oldname='bra_number_dig')
 
     @api.multi

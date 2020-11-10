@@ -402,13 +402,14 @@ class AccountInvoice(models.Model):
         for line in self.invoice_line_ids:
             other_taxes = line.invoice_line_tax_ids.filtered(
                 lambda x: not x.l10n_br_domain)
-            line.invoice_line_tax_ids = line.l10n_br_tax_icms_id | \
-                line.l10n_br_tax_icms_st_id | line.l10n_br_tax_icms_inter_id | \
-                line.l10n_br_tax_icms_intra_id | line.l10n_br_tax_icms_fcp_id | \
-                line.l10n_br_tax_ipi_id | line.l10n_br_tax_pis_id | \
-                line.l10n_br_tax_cofins_id |  line.l10n_br_tax_issqn_id | \
-                line.l10n_br_tax_ii_id | line.l10n_br_tax_csll_id | \
-                line.l10n_br_tax_irrf_id | line.l10n_br_tax_inss_id | other_taxes
+            line.invoice_line_tax_ids = \
+                line.l10n_br_tax_icms_id | line.l10n_br_tax_icms_st_id | \
+                line.l10n_br_tax_icms_inter_id | line.l10n_br_tax_icms_intra_id | \
+                line.l10n_br_tax_icms_fcp_id | line.l10n_br_tax_ipi_id | \
+                line.l10n_br_tax_pis_id | line.l10n_br_tax_cofins_id | \
+                line.l10n_br_tax_issqn_id | line.l10n_br_tax_ii_id | \
+                line.l10n_br_tax_csll_id | line.l10n_br_tax_irrf_id | \
+                line.l10n_br_tax_inss_id | other_taxes
 
             ctx = line._prepare_tax_context()
             tax_ids = line.invoice_line_tax_ids.with_context(**ctx)
@@ -480,7 +481,7 @@ class AccountInvoice(models.Model):
             vals = {'invoice_related_id': invoice.id,
                     'document_type':
                         doc_related.translate_document_type(
-                            invoice.product_document_id.code),
+                            invoice.l10n_br_product_document_id.code),
                     'access_key': doc.chave_nfe,
                     'numero': doc.numero}
             related = (0, False, vals)

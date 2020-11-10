@@ -16,14 +16,6 @@ class AccountInvoice(models.Model):
         'stock.picking', string="Picking Origin",
         oldname='picking_origin_id')
 
-    @api.multi
-    def copy(self, default=None):
-        new_acc_inv = super(AccountInvoice, self).copy(default)
-        for i in range(len(new_acc_inv.invoice_line_ids)):
-            new_acc_inv.invoice_line_ids[i].l10n_br_import_declaration_ids = \
-                self.invoice_line_ids[i].l10n_br_import_declaration_ids
-        return new_acc_inv
-
     @api.one
     @api.depends('invoice_line_ids.price_subtotal',
                  'invoice_line_ids.price_total',

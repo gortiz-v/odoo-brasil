@@ -236,7 +236,6 @@ class BoletoItau157(Boleto):
 
 
 class BoletoItau(Boleto):
-
     def __init__(self, order_line, nosso_numero):
         self.boleto = Boleto.getBoletoClass(order_line)()
         conta = order_line.src_bank_account_id

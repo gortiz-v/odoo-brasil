@@ -168,9 +168,8 @@ class AccountInvoiceLine(models.Model):
             'l10n_br_icms_uf_remet': sum([x['amount'] for x in icms_inter]),
             'l10n_br_icms_uf_dest': sum([x['amount'] for x in icms_intra]),
             'l10n_br_icms_fcp_uf_dest': sum([x['amount'] for x in icms_fcp]),
-            'l10n_br_icms_valor_credito': (
-                base_icms_credito *
-                (self.l10n_br_icms_aliquota_credito / 100)),
+            'l10n_br_icms_valor_credito': base_icms_credito *
+            (self.l10n_br_icms_aliquota_credito / 100),
             'l10n_br_ipi_base_calculo': sum([x['base'] for x in ipi]),
             'l10n_br_ipi_valor': sum([x['amount'] for x in ipi]),
             'l10n_br_pis_base_calculo': sum([x['base'] for x in pis]),
@@ -308,7 +307,7 @@ class AccountInvoiceLine(models.Model):
          ('4', u'4 - Margem Valor Agregado (%)'),
          ('5', u'5 - Pauta (valor)'),
          ('6', u'6 - Valor da Operação')],
-        'Tipo Base ICMS ST', required=True, default='4',
+        'Tipo Base ICMS ST', default='4',
         oldname='icms_st_tipo_base')
     l10n_br_icms_st_valor = fields.Float(
         'Valor ICMS ST', required=True, compute='_compute_price', store=True,
@@ -320,8 +319,8 @@ class AccountInvoiceLine(models.Model):
         oldname='icms_st_base_calculo')
     l10n_br_icms_st_aliquota = fields.Float(
         '% ICMS ST', digits=dp.get_precision('Discount'),
-        default=0.00)
-    icms_st_aliquota_reducao_base = fields.Float(
+        default=0.00, oldname='icms_st_aliquota')
+    l10n_br_icms_st_aliquota_reducao_base = fields.Float(
         '% Red. Base ST',
         digits=dp.get_precision('Discount'),
         oldname='icms_st_aliquota_reducao_base')
@@ -368,14 +367,18 @@ class AccountInvoiceLine(models.Model):
     # =========================================================================
     # ICMS Retido anteriormente por ST
     # =========================================================================
-    icms_substituto = fields.Monetary(
-        "ICMS Substituto", digits=dp.get_precision('Account'))
-    icms_bc_st_retido = fields.Monetary(
-        "Base Calc. ST Ret.", digits=dp.get_precision('Account'))
-    icms_aliquota_st_retido = fields.Float(
-        "% ST Retido", digits=dp.get_precision('Account'))
-    icms_st_retido = fields.Monetary(
-        "ICMS ST Ret.", digits=dp.get_precision('Account'))
+    l10n_br_icms_substituto = fields.Monetary(
+        "ICMS Substituto", digits=dp.get_precision('Account'),
+        oldname='icms_substituto')
+    l10n_br_icms_bc_st_retido = fields.Monetary(
+        "Base Calc. ST Ret.", digits=dp.get_precision('Account'),
+        oldname='icms_bc_st_retido')
+    l10n_br_icms_aliquota_st_retido = fields.Float(
+        "% ST Retido", digits=dp.get_precision('Account'),
+        oldname='icms_aliquota_st_retido')
+    l10n_br_icms_st_retido = fields.Monetary(
+        "ICMS ST Ret.", digits=dp.get_precision('Account'),
+        oldname='icms_st_retido')
 
     # =========================================================================
     # ICMS Simples Nacional
@@ -622,6 +625,10 @@ class AccountInvoiceLine(models.Model):
             })
 
     def _set_taxes_from_fiscal_pos(self):
+        super(AccountInvoiceLine, self)._set_taxes()
+        if not self.l10n_br_localization:
+            return
+        self._update_tax_from_ncm()
         fpos = self.invoice_id.fiscal_position_id
         if fpos:
             vals = fpos.map_tax_extra_values(
@@ -633,20 +640,19 @@ class AccountInvoiceLine(models.Model):
 
     def _set_taxes(self):
         super(AccountInvoiceLine, self)._set_taxes()
-        if not self.l10n_br_localization:
-            return
         self._update_tax_from_ncm()
         self._set_taxes_from_fiscal_pos()
         other_taxes = self.invoice_line_tax_ids.filtered(
             lambda x: not x.l10n_br_domain)
-        self.invoice_line_tax_ids = \
-            self.l10n_br_tax_icms_id | self.l10n_br_tax_icms_st_id | \
-            self.l10n_br_tax_icms_inter_id | self.l10n_br_tax_icms_intra_id | \
-            self.l10n_br_tax_icms_fcp_id | self.l10n_br_tax_ipi_id | \
-            self.l10n_br_tax_pis_id | self.l10n_br_tax_cofins_id | \
-            self.l10n_br_tax_issqn_id | self.l10n_br_tax_ii_id | \
-            self.l10n_br_tax_csll_id | self.l10n_br_tax_irrf_id | \
-            self.l10n_br_tax_inss_id | other_taxes
+        self.invoice_line_tax_ids = (
+                self.l10n_br_tax_icms_id | self.l10n_br_tax_icms_st_id |
+                self.l10n_br_tax_icms_inter_id |
+                self.l10n_br_tax_icms_intra_id | self.l10n_br_tax_icms_fcp_id |
+                self.l10n_br_tax_ipi_id | self.l10n_br_tax_pis_id |
+                self.l10n_br_tax_cofins_id | self.l10n_br_tax_issqn_id |
+                self.l10n_br_tax_ii_id | self.l10n_br_tax_csll_id |
+                self.l10n_br_tax_irrf_id | self.l10n_br_tax_inss_id |
+                other_taxes)
 
     def _set_extimated_taxes(self, price):
         service = self.product_id.l10n_br_service_type_id
@@ -660,9 +666,8 @@ class AccountInvoiceLine(models.Model):
             self.l10n_br_tributos_estimados_municipais = (
                 price * (service.municipal_imposto / 100))
         else:
-            federal = ncm.federal_nacional \
-                if self.l10n_br_icms_origem in ('0', '3', '4', '5', '8') \
-                else ncm.federal_importado
+            federal = ncm.federal_nacional if self.l10n_br_icms_origem in \
+                ('0', '3', '4', '5', '8') else ncm.federal_importado
 
             self.l10n_br_tributos_estimados_federais = price * (federal / 100)
             self.l10n_br_tributos_estimados_estaduais = (

@@ -14,7 +14,6 @@ class AccountInvoiceRefund(models.TransientModel):
     @api.multi
     def invoice_refund(self):
         res = super(AccountInvoiceRefund, self).invoice_refund()
-
         if not self.l10n_br_localization:
             return res
         if type(res) is bool:
@@ -29,12 +28,12 @@ class AccountInvoiceRefund(models.TransientModel):
         fiscal_pos = self.l10n_br_fiscal_position_id
         invoice_id.write({
             'fiscal_position_id': fiscal_pos.id,
-            'product_serie_id': fiscal_pos.product_serie_id.id,
-            'product_document_id': fiscal_pos.product_document_id.id,
-            'service_serie_id': fiscal_pos.service_serie_id.id,
-            'service_document_id': fiscal_pos.service_document_id.id,
+            'product_serie_id': fiscal_pos.l10n_br_product_serie_id.id,
+            'product_document_id': fiscal_pos.l10n_br_product_document_id.id,
+            'service_serie_id': fiscal_pos.l10n_br_service_serie_id.id,
+            'service_document_id': fiscal_pos.l10n_br_service_document_id.id,
             'fiscal_observation_ids': [(
-                6, False, [x.id for x in fiscal_pos.fiscal_observation_ids]
+                6, False, [x.id for x in fiscal_pos.l10n_br_fiscal_observation_ids]
             )]
         })
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -122,7 +123,7 @@ class InvoiceEletronic(models.Model):
                 'tipo_cpfcnpj': 2 if partner.is_company else 1,
                 'cpf_cnpj': re.sub('[^0-9]', '',
                                    partner.l10n_br_cnpj_cpf or ''),
-                'razao_social': partner.l10n_br_legal_name or '',
+                'razao_social': partner.l10n_br_legal_name or partner.name,
                 'logradouro': partner.street or '',
                 'numero': partner.l10n_br_number or '',
                 'complemento': partner.street2 or '',
@@ -285,19 +286,18 @@ class InvoiceEletronic(models.Model):
                     'mensagem_retorno': 'Nota Paulistana emitida com sucesso',
                 })
 
-                    # Apenas producão tem essa tag
-                    if self.ambiente == 'producao':
-                        self.verify_code = \
-                            retorno.ChaveNFeRPS.ChaveNFe.CodigoVerificacao
-                        self.numero_nfse = retorno.ChaveNFeRPS.ChaveNFe \
-                            .NumeroNFe
+                # Apenas producão tem essa tag
+                if self.ambiente == 'producao':
+                    self.verify_code = \
+                        retorno.ChaveNFeRPS.ChaveNFe.CodigoVerificacao
+                    self.numero_nfse = retorno.ChaveNFeRPS.ChaveNFe \
+                        .NumeroNFe
 
-                    for inv_line in self.invoice_id.invoice_line_ids:
-                        if (inv_line.product_id.l10n_br_fiscal_type ==
-                                'service'):
-                            inv_line.write(
-                                {'l10n_br_state': 'transmitido',
-                                 'l10n_br_numero_nfse': self.numero_nfse})
+                for inv_line in self.invoice_id.invoice_line_ids:
+                    if inv_line.product_id.l10n_br_fiscal_type == 'service':
+                        inv_line.write(
+                            {'l10n_br_state': 'transmitido',
+                             'l10n_br_numero_nfse': self.numero_nfse})
 
             else:
                 self.write({
@@ -325,8 +325,7 @@ class InvoiceEletronic(models.Model):
                 justificativa=justificativa)
 
         _logger.info('Cancelling NFS-e Paulistana (%s)' % self.numero)
-        cert = self.company_id.with_context(
-            {'bin_size': False}).l10n_br_nfe_a1_file
+        cert = self.company_id.with_context({'bin_size': False}).l10n_br_nfe_a1_file
         cert_pfx = base64.decodestring(cert)
         certificado = Certificado(cert_pfx,
                                   self.company_id.l10n_br_nfe_a1_password)

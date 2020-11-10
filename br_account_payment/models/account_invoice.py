@@ -13,7 +13,8 @@ class AccountInvoice(models.Model):
 
     l10n_br_payment_mode_id = fields.Many2one(
         'l10n_br.payment.mode', readonly=True,
-        states=FIELD_STATE, string=u"Modo de pagamento")
+        states=FIELD_STATE, string=u"Modo de pagamento",
+        oldname='payment_mode_id')
 
     @api.multi
     def finalize_invoice_move_lines(self, move_lines):

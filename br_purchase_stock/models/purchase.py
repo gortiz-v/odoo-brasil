@@ -16,11 +16,12 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.update({
                 'amount_total': (
-                    order.l10n_br_total_bruto +
-                    order.l10n_br_total_tax +
-                    order.l10n_br_total_frete +
-                    order.l10n_br_total_seguro +
-                    order.l10n_br_total_despesas),
+                        order.l10n_br_total_bruto +
+                        order.l10n_br_total_tax +
+                        order.l10n_br_total_frete +
+                        order.l10n_br_total_seguro +
+                        order.l10n_br_total_despesas -
+                        order.l10n_br_total_desconto),
             })
         self._onchange_despesas_frete_seguro()
 
@@ -130,7 +131,7 @@ class PuchaseOrderLine(models.Model):
             'valor_seguro': self.l10n_br_valor_seguro,
             'outras_despesas': self.l10n_br_outras_despesas,
             'ii_despesas': self.l10n_br_valor_aduana,
-            'fiscal_type': self.fiscal_position_type,
+            'fiscal_type': self.l10n_br_fiscal_position_type,
         })
         return res
 

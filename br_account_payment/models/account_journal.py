@@ -9,7 +9,8 @@ class AccountJournal(models.Model):
     _inherit = ['account.journal', 'br.localization.filtering']
 
     l10n_br_sequence_statements = fields.Many2one(
-        'ir.sequence', string="Sequência Extratos de Retorno")
+        'ir.sequence', string="Sequência Extratos de Retorno",
+        oldname='sequence_statements')
 
     l10n_br_acc_number_dig = fields.Char(
         related='bank_account_id.acc_number_dig',

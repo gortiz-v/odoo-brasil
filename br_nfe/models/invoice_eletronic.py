@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -549,7 +550,7 @@ class InvoiceEletronic(models.Model):
                 'fone': re.sub('[^0-9]', '', self.company_id.phone or '')
             },
             'IE': re.sub('[^0-9]', '', self.company_id.l10n_br_inscr_est),
-            'IEST': re.sub('[^0-9]', '', self.l10n_br_iest or ''),
+            'IEST': re.sub('[^0-9]', '', self.iest or ''),
             'CRT': self.company_id.l10n_br_fiscal_type,
         }
         if self.company_id.l10n_br_cnae_main_id and \
@@ -583,7 +584,7 @@ class InvoiceEletronic(models.Model):
                 },
                 'indIEDest': self.ind_ie_dest,
                 'IE':  re.sub('[^0-9]', '', partner.l10n_br_inscr_est or ''),
-                'ISUF': partner.suframa or '',
+                'ISUF': partner.l10n_br_suframa or '',
             }
             if self.model == '65':
                 dest.update(
@@ -613,13 +614,13 @@ class InvoiceEletronic(models.Model):
             shipping_id = self.partner_shipping_id
 
             entrega = {
-                'xNome': shipping_id.legal_name or shipping_id.name,
+                'xNome': shipping_id.l10n_br_legal_name or shipping_id.name,
                 'xLgr': shipping_id.street,
-                'nro': shipping_id.number,
+                'nro': shipping_id.l10n_br_number,
                 'xCpl': shipping_id.street2 or '',
-                'xBairro': shipping_id.district,
-                'cMun': '%s%s' % (shipping_id.state_id.ibge_code,
-                                  shipping_id.city_id.ibge_code),
+                'xBairro': shipping_id.l10n_br_district,
+                'cMun': '%s%s' % (shipping_id.state_id.l10n_br_ibge_code,
+                                  shipping_id.city_id.l10n_br_ibge_code),
                 'xMun': shipping_id.city_id.name,
                 'UF': shipping_id.state_id.code,
                 'CEP': re.sub('[^0-9]', '', shipping_id.zip or ''),
@@ -628,7 +629,7 @@ class InvoiceEletronic(models.Model):
                 'fone': re.sub('[^0-9]', '', shipping_id.phone or '')
             }
             cnpj_cpf = re.sub(
-                "[^0-9]", "", shipping_id.cnpj_cpf or partner.cnpj_cpf or ""
+                "[^0-9]", "", shipping_id.cnpj_cpf or partner.l10n_br_cnpj_cpf or ""
             )
 
             if len(cnpj_cpf) == 14:
@@ -948,9 +949,11 @@ class InvoiceEletronic(models.Model):
             cert_pfx, self.company_id.l10n_br_nfe_a1_password)
 
         nfe_values = self._prepare_eletronic_invoice_values()
+
         lote = self._prepare_lote(self.id, nfe_values)
 
         xml_enviar = xml_autorizar_nfe(certificado, **lote)
+
         mensagens_erro = valida_nfe(xml_enviar)
         if mensagens_erro:
             raise UserError(mensagens_erro)
@@ -1111,8 +1114,7 @@ class InvoiceEletronic(models.Model):
             }
 
         _logger.info('Cancelling NF-e (%s)' % self.numero)
-        cert = self.company_id.with_context(
-            {'bin_size': False}).l10n_br_nfe_a1_file
+        cert = self.company_id.with_context({'bin_size': False}).l10n_br_nfe_a1_file
         cert_pfx = base64.decodestring(cert)
         certificado = Certificado(cert_pfx,
                                   self.company_id.l10n_br_nfe_a1_password)

@@ -26,7 +26,6 @@
         'views/sale.xml',
         'views/stock.xml',
         'views/account_invoice.xml',
-        'views/product_template.xml',
         'security/ir.model.access.csv',
     ],
     'demo': [

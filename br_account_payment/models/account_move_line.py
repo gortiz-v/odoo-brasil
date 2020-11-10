@@ -8,9 +8,11 @@ class AccountMoveLine(models.Model):
     _inherit = ['account.move.line', 'br.localization.filtering']
 
     l10n_br_payment_mode_id = fields.Many2one(
-        'l10n_br.payment.mode', string=u"Modo de pagamento")
+        'l10n_br.payment.mode', string=u"Modo de pagamento",
+        oldname='payment_mode_id')
     l10n_br_order_line_id = fields.Many2one(
-        'payment.order.line', string='Linha de Pagamento')
+        'payment.order.line', string='Linha de Pagamento',
+        oldname='order_line_id')
 
     @api.multi
     @api.depends('debit', 'credit', 'user_type_id', 'amount_residual')

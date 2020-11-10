@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -89,6 +90,8 @@ class AccountFiscalPosition(models.Model):
     l10n_br_fiscal_observation_ids = fields.Many2many(
         'br_account.fiscal.observation', string=u"Mensagens Doc. Eletrônico",
         copy=True, oldname='fiscal_observation_ids')
+    note = fields.Text(u'Observações')
+
     l10n_br_product_serie_id = fields.Many2one(
         'br_account.document.serie', string=u'Série Produto',
         domain="[('fiscal_document_id', '=', l10n_br_product_document_id)]", copy=True,
@@ -142,10 +145,10 @@ class AccountFiscalPosition(models.Model):
         string=u"Regras INSS", domain=[('domain', '=', 'inss')], copy=True,
         oldname='inss_tax_rule_ids')
     l10n_br_fiscal_type = fields.Selection([('saida', 'Saída'),
-                                            ('entrada', 'Entrada'),
-                                            ('import', 'Entrada Importação')],
-                                           string=u"Tipo da posição", copy=True,
-                                           oldname='fiscal_type')
+                                    ('entrada', 'Entrada'),
+                                    ('import', 'Entrada Importação')],
+                                   string=u"Tipo da posição", copy=True,
+                                   oldname='fiscal_type')
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False,

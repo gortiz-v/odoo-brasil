@@ -119,12 +119,9 @@
                     </div>
                     <div class="col-xs-12">
                         Endereço:
-                        <strong t-field="doc.company_id.partner_id.street">
-                        </strong>
-                        <strong t-field="doc.company_id.partner_id.l10n_br_number">
-                        </strong>
-                        <strong t-field="doc.company_id.partner_id.l10n_br_district">
-                        </strong>
+                        <strong t-field="doc.company_id.partner_id.street" />
+                        <strong t-field="doc.company_id.partner_id.l10n_br_number" />
+                        <strong t-field="doc.company_id.partner_id.l10n_br_district" />
                         <strong>CEP: </strong>
                         <strong t-field="doc.company_id.partner_id.zip" />
                     </div>
@@ -156,12 +153,9 @@
                 </div>
                 <div class="col-xs-12">
                     Endereço:
-                    <strong t-field="doc.commercial_partner_id.street">
-                    </strong>
-                    <strong t-field="doc.commercial_partner_id.l10n_br_number">
-                    </strong>
-                    <strong t-field="doc.commercial_partner_id.l10n_br_district">
-                    </strong>
+                    <strong t-field="doc.commercial_partner_id.street" />
+                    <strong t-field="doc.commercial_partner_id.l10n_br_number" />
+                    <strong t-field="doc.commercial_partner_id.l10n_br_district" />
                     <strong>CEP: </strong>
                     <strong t-field="doc.commercial_partner_id.zip" />
                 </div>

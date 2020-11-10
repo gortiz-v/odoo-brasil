@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2016 Alessandro Fernandes Martini <alessandrofmartini@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -62,20 +63,18 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
         tz = pytz.timezone(self.env.user.partner_id.tz) or pytz.utc
         dt_evento = datetime.utcnow()
         dt_evento = pytz.utc.localize(dt_evento).astimezone(tz)
+        numero_evento = len(self.eletronic_doc_id.cartas_correcao_ids) + 1
 
         carta = {
             'idLote': self.id,
-            'estado':
-                self.eletronic_doc_id.company_id.state_id.l10n_br_ibge_code,
+            'estado':  self.eletronic_doc_id.company_id.state_id.l10n_br_ibge_code,
             'ambiente': int(self.eletronic_doc_id.company_id.tipo_ambiente),
             'modelo': self.eletronic_doc_id.model,
             'eventos': [{
                 'invoice_id': self.eletronic_doc_id.id,
                 'CNPJ': re.sub(
-                    "[^0-9]", "",
-                    self.eletronic_doc_id.company_id.l10n_br_cnpj_cpf),
-                'cOrgao': self.
-                eletronic_doc_id.company_id.state_id.l10n_br_ibge_code,
+                    "[^0-9]", "", self.eletronic_doc_id.company_id.l10n_br_cnpj_cpf),
+                'cOrgao':  self.eletronic_doc_id.company_id.state_id.l10n_br_ibge_code,
                 'tpAmb': self.eletronic_doc_id.company_id.tipo_ambiente,
                 'dhEvento':  dt_evento.strftime('%Y-%m-%dT%H:%M:%S-03:00'),
                 'chNFe': self.eletronic_doc_id.chave_nfe,

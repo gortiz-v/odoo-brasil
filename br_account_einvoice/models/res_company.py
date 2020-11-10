@@ -8,7 +8,8 @@ class ResCompany(models.Model):
     _inherit = 'res.company'
 
     l10n_br_nfse_conjugada = fields.Boolean(
-        string="Emite NFSe Conjugada?", default=False)
+        string="Emite NFSe Conjugada?", default=False,
+        oldname='nfse_conjugada')
 
     l10n_br_tipo_ambiente_nfse = fields.Selection(
         [('producao', u'Produção'), ('homologacao', u'Homologação')],

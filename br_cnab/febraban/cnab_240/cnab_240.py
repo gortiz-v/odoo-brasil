@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # © 2015 Luis Felipe Mileo
 #        Fernando Marcato Rodrigues
 #        Daniel Sadamo Hirayama
@@ -72,8 +73,7 @@ class Cnab240(Cnab):
             'arquivo_sequencia': self.order.file_number,
             'cedente_inscricao_tipo': self.inscricao_tipo,
             'cedente_inscricao_numero': int(cnpj_cpf),
-            'cedente_agencia': int(
-                self.order.src_bank_account_id.l10n_br_number),
+            'cedente_agencia': int(self.order.src_bank_account_id.l10n_br_number),
             'cedente_conta': int(self.order.src_bank_account_id.acc_number),
             'cedente_conta_dv': cedente_conta_dv,
             'cedente_convenio': self.order.src_bank_account_id.codigo_convenio,
@@ -81,8 +81,7 @@ class Cnab240(Cnab):
             self.order.src_bank_account_id.l10n_br_number_dig,
             'cedente_nome': self.order.company_id.l10n_br_legal_name,
             # DV ag e conta
-            'cedente_dv_ag_cc':
-                self.order.src_bank_account_id.l10n_br_number_dig,
+            'cedente_dv_ag_cc': self.order.src_bank_account_id.l10n_br_number_dig,
             'arquivo_codigo': 1,  # Remessa/Retorno
             'servico_operacao': u'R',
             'nome_banco': self.order.src_bank_account_id.bank_name
@@ -140,18 +139,23 @@ class Cnab240(Cnab):
         # Era cedente_agencia_conta_dv agora é cedente_dv_ag_cc
 
         return {
-            'controle_banco': int(self.order.src_bank_account_id.bank_bic),
-            'cedente_agencia':
-                int(self.order.src_bank_account_id.l10n_br_number),
-            'cedente_conta': int(self.order.src_bank_account_id.acc_number),
-            'cedente_conta_dv': self.order.src_bank_account_id.acc_number_dig,
-            'cedente_convenio': self.order.src_bank_account_id.codigo_convenio,
-            'cedente_agencia_dv':
-            self.order.src_bank_account_id.l10n_br_number_dig,
-            'cedente_nome': self.order.company_id.l10n_br_legal_name,
+            'controle_banco': int(self.order.l10n_br_payment_mode_id.
+                                  bank_account_id.bank_bic),
+            'cedente_agencia': int(self.order.l10n_br_payment_mode_id.
+                                   bank_account_id.l10n_br_number),
+            'cedente_conta': int(self.order.l10n_br_payment_mode_id.
+                                 bank_account_id.acc_number),
+            'cedente_conta_dv': (self.order.l10n_br_payment_mode_id.
+                                 bank_account_id.acc_number_dig),
+            'cedente_convenio': (self.order.l10n_br_payment_mode_id.
+                                 bank_account_id.codigo_convenio),
+            'cedente_agencia_dv': (self.order.l10n_br_payment_mode_id.
+                                   bank_account_id.l10n_br_number_dig),
+            'cedente_nome': (self.order.l10n_br_payment_mode_id.
+                             bank_account_id.partner_id.l10n_br_legal_name),
             # DV ag e cc
-            'cedente_dv_ag_cc':
-                self.order.src_bank_account_id.l10n_br_number_dig,
+            'cedente_dv_ag_cc': (self.order.l10n_br_payment_mode_id.
+                                 bank_account_id.l10n_br_number_dig),
             'identificacao_titulo': u'0000000',  # TODO
             'identificacao_titulo_banco': u'0000000',  # TODO
             'identificacao_titulo_empresa': (' ' * 25),
@@ -180,8 +184,8 @@ class Cnab240(Cnab):
             'data_multa': self.format_date(
                 line.date_maturity),
             'juros_multa': Decimal(
-                str(self.order.l10n_br_payment_mode_id.late_payment_fee)
-            ).quantize(Decimal('1.00')),
+                str(self.order.l10n_br_payment_mode_id.late_payment_fee)).quantize(
+                    Decimal('1.00')),
             'valor_abatimento': Decimal('0.00'),
             'sacado_inscricao_tipo': int(
                 self.sacado_inscricao_tipo(line.partner_id)),

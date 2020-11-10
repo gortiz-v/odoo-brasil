@@ -19,10 +19,10 @@ class PurchaseOrder(models.Model):
                 'amount_tax': price_total - price_subtotal,
                 'amount_total': price_total,
                 'l10n_br_total_tax': price_total - price_subtotal,
+                'l10n_br_total_desconto': sum(l.l10n_br_valor_desconto
+                                      for l in order.order_line),
                 'l10n_br_total_bruto': sum(l.l10n_br_valor_bruto
                                            for l in order.order_line),
-                'l10n_br_total_desconto': sum(l.l10n_br_valor_desconto
-                                              for l in order.order_line),
             })
 
     @api.multi
@@ -81,17 +81,17 @@ class PurchaseOrderLine(models.Model):
             'l10n_br_ipi_reducao_bc': self.l10n_br_ipi_reducao_bc,
             'l10n_br_icms_st_aliquota_deducao':
                 self.l10n_br_icms_st_aliquota_deducao,
-            'fiscal_type': self.fiscal_position_type,
+            'fiscal_type': self.l10n_br_fiscal_position_type,
         }
 
-    @api.depends('taxes_id', 'product_qty',  'price_unit', 'discount',
+    @api.depends('taxes_id', 'product_qty', 'price_unit', 'l10n_br_discount',
                  'l10n_br_icms_aliquota_reducao_base',
                  'l10n_br_icms_st_aliquota_reducao_base',
                  'l10n_br_ipi_reducao_bc', 'l10n_br_icms_st_aliquota_deducao',
                  'l10n_br_incluir_ipi_base', 'l10n_br_icms_st_aliquota_mva')
     def _compute_amount(self):
         for line in self:
-            price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
+            price = line.price_unit * (1 - (line.l10n_br_discount or 0.0) / 100.0)
             ctx = line._prepare_tax_context()
             tax_ids = line.taxes_id.with_context(**ctx)
             taxes = tax_ids.compute_all(
@@ -100,7 +100,7 @@ class PurchaseOrderLine(models.Model):
                 partner=line.order_id.partner_id)
 
             valor_bruto = line.price_unit * line.product_qty
-            desconto = valor_bruto * line.discount / 100.0
+            desconto = valor_bruto * line.l10n_br_discount / 100.0
             desconto = line.order_id.currency_id.round(desconto)
 
             line.update({
@@ -111,11 +111,10 @@ class PurchaseOrderLine(models.Model):
                 'l10n_br_valor_desconto': desconto,
             })
 
-    fiscal_position_type = fields.Selection([
-        ('saida', 'Saída'),
-        ('entrada', 'Entrada'),
-        ('import', 'Entrada Importação')
-    ], string="Tipo da posição fiscal")
+    l10n_br_fiscal_position_type = fields.Selection(
+        [('saida', 'Saída'), ('entrada', 'Entrada'),
+         ('import', 'Entrada Importação')],
+        string="Tipo da posição fiscal", oldname='fiscal_position_type')
     l10n_br_cfop_id = fields.Many2one('br_account.cfop', string="CFOP",
                                       oldname='cfop_id')
 
@@ -157,14 +156,17 @@ class PurchaseOrderLine(models.Model):
                                      oldname='cofins_cst')
     l10n_br_issqn_deduction = fields.Float(string="% Dedução de base ISSQN",
                                            oldname='issqn_deduction')
-    discount = fields.Float(
+
+    l10n_br_discount = fields.Float(
         string='Discount (%)',
         digits=dp.get_precision('Discount'),
-        default=0.0)
+        default=0.0,
+        oldname='discount')
 
     l10n_br_valor_desconto = fields.Float(
         compute='_compute_amount', string=u'Vlr. Desc. (-)', store=True,
-        digits=dp.get_precision('Sale Price'))
+        digits=dp.get_precision('Sale Price'),
+        oldname='valor_desconto')
     l10n_br_valor_bruto = fields.Float(
         compute='_compute_amount', string='Vlr. Bruto', store=True,
         digits=dp.get_precision('Sale Price'),
@@ -223,7 +225,7 @@ class PurchaseOrderLine(models.Model):
 
                 line.update({
                     'taxes_id': [(6, None, [x.id for x in tax_ids if x])],
-                    'fiscal_position_type': fpos.l10n_br_fiscal_type,
+                    'l10n_br_fiscal_position_type': fpos.fiscal_type,
                 })
 
     # Calcula o custo da mercadoria comprada
